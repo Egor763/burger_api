@@ -8,6 +8,12 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = "__all__"
 
+    def clean(self):
+        cleaned_data = super().clean(self)
+        if User.objects.filter(email=cleaned_data.get("email")).exists():
+            self.fields.add_error("email", "Эта почта уже зарегестрированна")
+        return cleaned_data
+
 
 class CardSerializer(serializers.ModelSerializer):
     class Meta:

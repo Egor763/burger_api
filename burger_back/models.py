@@ -19,7 +19,7 @@ class Card(models.Model):
 
 
 class User(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    _id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
     password = models.CharField(max_length=300, blank=True, null=True)
