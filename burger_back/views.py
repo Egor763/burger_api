@@ -25,7 +25,9 @@ class RegistrationView(APIView):
         )
 
         # del serializer_user["password"]
+        # генерируем access_token
         access_token = generate_access_token(request.data)
+        # генерируем refresh_token
         refresh_token = generate_refresh_token(request.data)
         request.data["refresh_token"] = refresh_token
 
@@ -40,13 +42,16 @@ class RegistrationView(APIView):
                 status=status.HTTP_200_OK,
             )
 
+        # сериализатор в формат python
         serializer = UserSerializer(data=request.data)
 
         if serializer.is_valid():
 
             serializer.save()
+            # находится пользователь по email
             user = User.objects.get(email=request.data["email"])
 
+            # сериализатор в формат json
             serializer_user = UserSerializer(user).data
             del serializer_user["password"]
 
@@ -114,6 +119,7 @@ class LoginView(APIView):
         email = request.data["email"]
         hashed_password = make_password(password=password, salt=SALT)
 
+        # ищется пользователь по email
         user = User.objects.get(email=email)
 
         if user is None or user.password != hashed_password:
