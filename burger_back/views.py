@@ -57,8 +57,9 @@ class RegistrationView(APIView):
 
             return Response(
                 {
-                    "access_token": access_token,
-                    "refresh_token": refresh_token,
+                    "success": True,
+                    "accessToken": access_token,
+                    "refreshToken": refresh_token,
                     "user": serializer_user,
                 },
                 status=status.HTTP_200_OK,
@@ -113,6 +114,22 @@ class UserViewSet(APIView):
             return Response(user, status=status.HTTP_200_OK)
 
 
+class UpdateTokenViewSet(APIView):
+    def post(self, request, format=None):
+        refresh = request.data["token"]
+        # если при поискепо полученному с фронтенда refresh_token нахходится user в котором хранится refresh_token то значит ключи
+        # одинаковые (проверку прошли)
+        user = User.objects.filter(refresh_token=refresh)
+        print(request.data)
+        return Response(
+            {
+                "success": False,
+                "message": "Токен не обновился",
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
 class LoginView(APIView):
     def post(self, request, format=None):
         password = request.data["password"]
@@ -138,8 +155,9 @@ class LoginView(APIView):
             del serializer["password"]
             return Response(
                 {
-                    "access_token": access_token,
-                    "refresh_token": refresh_token,
+                    "success": True,
+                    "accessToken": access_token,
+                    "refreshToken": refresh_token,
                     "user": serializer,
                 },
                 status=status.HTTP_200_OK,
