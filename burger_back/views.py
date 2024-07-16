@@ -96,6 +96,7 @@ class CardViewSet(APIView):
 
 class UserViewSet(APIView):
     def get(self, request, format=None):
+        print("o")
         # проверка токена, нужна для защищенной информации
         SafeJWTAuthentication.authenticate(self, request)
         user = request.user
@@ -113,21 +114,71 @@ class UserViewSet(APIView):
         else:
             return Response(user, status=status.HTTP_200_OK)
 
+    def patch(self, request, format=None):
+        print("i")
+        if request.method == "PATCH":
+            serializer_user, user = SafeJWTAuthentication.authenticate(self, request)
+            print(serializer_user)
+            name = request.data["name"]
+            email = request.data["email"]
+            # password = request.data["password"]
+
+            serializer_user["name"] = name
+            serializer_user["email"] = email
+            # serializer_user["password"] = password
+
+            serializer = UserSerializer(user, data=serializer_user, partial=True)
+
+            if serializer.is_valid():
+                serializer.save()
+                return Response(
+                    {
+                        "success": True,
+                        "user": serializer_user,
+                    },
+                    status=status.HTTP_200_OK,
+                )
+
+            else:
+                return Response(
+                    {
+                        "success": False,
+                        "message": "Данные пользователя не обновились",
+                    },
+                    status=status.HTTP_200_OK,
+                )
+
 
 class UpdateTokenViewSet(APIView):
     def post(self, request, format=None):
+        # достается из фронтенда token
         refresh = request.data["token"]
-        # если при поискепо полученному с фронтенда refresh_token нахходится user в котором хранится refresh_token то значит ключи
+        # если при поиске по полученному с фронтенда refresh_token находится user в котором хранится refresh_token то значит ключи
         # одинаковые (проверку прошли)
-        user = User.objects.filter(refresh_token=refresh)
-        print(request.data)
-        return Response(
-            {
-                "success": False,
-                "message": "Токен не обновился",
-            },
-            status=status.HTTP_200_OK,
-        )
+        user = User.objects.get(refresh_token=refresh)
+        # сериализуем user из python в json
+        serializer = UserSerializer(user).data
+        refresh_db = serializer["refresh_token"]
+        # если пользователь не найден то возвращается ошибка
+        if serializer["email"] is None or refresh_db != refresh:
+            return Response(
+                {
+                    "success": False,
+                    "message": "Токен не обновился",
+                },
+                status=status.HTTP_200_OK,
+            )
+        # если пользователь найден то генерируется access_token и возвращается access_token, refresh_token и success: True
+        else:
+            access_token = generate_access_token(serializer)
+            return Response(
+                {
+                    "accessToken": access_token,
+                    "refreshToken": refresh,
+                    "success": True,
+                },
+                status=status.HTTP_200_OK,
+            )
 
 
 class LoginView(APIView):
@@ -159,6 +210,33 @@ class LoginView(APIView):
                     "accessToken": access_token,
                     "refreshToken": refresh_token,
                     "user": serializer,
+                },
+                status=status.HTTP_200_OK,
+            )
+
+
+class LogoutViewSet(APIView):
+    def post(self, request, format=None):
+        refresh = request.data["token"]
+        user = User.objects.get(refresh_token=refresh)
+        serializer = UserSerializer(user).data
+        serializer["refresh_token"] = ""
+        print(serializer)
+
+        serializer_update = UserSerializer(user, data=serializer, partial=True)
+        if serializer_update.is_valid():
+            serializer_update.save()
+            return Response(
+                {
+                    "success": True,
+                },
+                status=status.HTTP_200_OK,
+            )
+        else:
+            return Response(
+                {
+                    "success": False,
+                    "message": "Ошибка",
                 },
                 status=status.HTTP_200_OK,
             )

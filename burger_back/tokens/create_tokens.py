@@ -8,7 +8,7 @@ def generate_access_token(user):
     # словарь access_token
     access_token_payload = {
         "user_email": user["email"],
-        "exp": datetime.datetime.utcnow() + datetime.timedelta(days=0, seconds=30),
+        "exp": datetime.datetime.utcnow() + datetime.timedelta(days=0, hours=100),
         # "iat": datetime.datetime.utcnow(),
     }
     access_token = jwt.encode(
@@ -22,7 +22,7 @@ def generate_refresh_token(user):
     # словарь refresh_token
     refresh_token_payload = {
         "user_email": user["email"],
-        "exp": datetime.datetime.utcnow() + datetime.timedelta(days=7),
+        "exp": datetime.datetime.utcnow() + datetime.timedelta(days=100),
         "iat": datetime.datetime.utcnow(),
     }
     refresh_token = jwt.encode(

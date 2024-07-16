@@ -40,7 +40,7 @@ class SafeJWTAuthentication(BaseAuthentication):
             raise exceptions.AuthenticationFailed("Token prefix missing")
 
         # ищется id по первому пользователю
-        user = User.objects.filter(id=payload["user_id"]).first()
+        user = User.objects.filter(email=payload["user_email"]).first()
         if user is None:
             # вывод ошибки пользователь не ненайден
             raise exceptions.AuthenticationFailed("Пользователь не найден")
