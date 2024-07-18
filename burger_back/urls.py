@@ -8,6 +8,7 @@ from .views import (
     UpdateTokenViewSet,
     LogoutViewSet,
 )
+from .password_views import ForgotPasswordView, ResetPasswordView
 
 urlpatterns = [
     path("ingredients", CardViewSet.as_view(), name="ingredients"),
@@ -16,4 +17,6 @@ urlpatterns = [
     path("auth/login", LoginView.as_view(), name="login"),
     path("auth/token", UpdateTokenViewSet.as_view(), name="token"),
     path("auth/logout", LogoutViewSet.as_view(), name="logout"),
+    path("password-reset", ForgotPasswordView.as_view(), name="forgot-password"),
+    path("password-reset/reset", ResetPasswordView.as_view(), name="reset-password"),
 ]

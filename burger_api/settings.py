@@ -60,6 +60,28 @@ CORS_ORIGIN_WHITELIST = [
     "http://localhost:3000",
 ]
 
+CACHES = {
+    # a cache alias or name. In this case, we use "default" as the alias.
+    "default": {
+        # Here, we're using the in-memory cache backend.
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        # LOCATION parameter gives a unique name or identifier to this cache instance.
+        "LOCATION": "127.0.0.1:11211",
+    }
+}
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.yandex.ru"
+EMAIL_PORT = 465
+EMAIL_USE_SSL = True
+
+EMAIL_HOST_USER = "egor241209@yandex.ru"
+EMAIL_HOST_PASSWORD = "qxbgpdysjokoeebn"
+
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+SERVER_EMAIL = EMAIL_HOST_USER
+EMAIL_ADMIN = EMAIL_HOST_USER
+
 ROOT_URLCONF = "burger_api.urls"
 
 TEMPLATES = [
