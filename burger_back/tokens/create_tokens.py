@@ -11,6 +11,7 @@ def generate_access_token(user):
         "exp": datetime.datetime.utcnow() + datetime.timedelta(days=0, hours=100),
         # "iat": datetime.datetime.utcnow(),
     }
+    # access_token кодируется в секретный ключ
     access_token = jwt.encode(
         access_token_payload, settings.SECRET_KEY, algorithm="HS256"
     )
@@ -25,6 +26,8 @@ def generate_refresh_token(user):
         "exp": datetime.datetime.utcnow() + datetime.timedelta(days=100),
         "iat": datetime.datetime.utcnow(),
     }
+
+    # refresh_token кодируется в секретный ключ
     refresh_token = jwt.encode(
         refresh_token_payload, settings.REFRESH_TOKEN_SECRET, algorithm="HS256"
     )

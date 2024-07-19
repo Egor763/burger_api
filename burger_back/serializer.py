@@ -8,6 +8,7 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = "__all__"
 
+    # обновляются заданные поля
     def update(self, instance, validated_data):
         instance.name = validated_data.get("name", instance.name)
         instance.email = validated_data.get("email", instance.email)
@@ -18,6 +19,7 @@ class UserSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+    # обрабатываем ошибку почта уже зарегистрирована
     def clean(self):
         cleaned_data = super().clean(self)
         if User.objects.filter(email=cleaned_data.get("email")).exists():

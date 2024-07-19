@@ -27,9 +27,8 @@ SALT = (
 
 class ForgotPasswordView(APIView):
     def post(self, request, format=None):
+        # получаем из фронтенда email
         email = request.data["email"]
-        # TODO обработать ошибку неверного email
-
         subject = "Ссылка на забытый пароль"
 
         psw = ""  # предварительно создаем переменную psw
@@ -37,6 +36,7 @@ class ForgotPasswordView(APIView):
             psw = psw + random.choice(
                 list("123456789qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM")
             )
+        # psw и email сохраняются в кэш
         cache.set(
             "code",
             {
@@ -45,6 +45,7 @@ class ForgotPasswordView(APIView):
             },
         )
         content = f"Код для сброса пароля {psw}"
+        # добавляются переменные для отправки кода на почту
         send_mail(
             subject,
             content,
@@ -52,6 +53,7 @@ class ForgotPasswordView(APIView):
             [settings.EMAIL_HOST_USER],
             fail_silently=False,
         )
+        # возрващаем успешный ответ
         return Response(
             {
                 "success": True,
@@ -63,20 +65,31 @@ class ForgotPasswordView(APIView):
 
 class ResetPasswordView(APIView):
     def post(self, request, format=None):
+        # получаем из фронтенда пароль
         new_password = request.data["password"]
-        hashed_password = make_password(password=new_password, salt=SALT)
+        # хэшируем пароль
+        new_hashed_password = make_password(password=new_password, salt=SALT)
+        # получаем из фронтенда токен
         token = request.data["token"]
+        # получаем code
         cache_data = cache.get("code")
+        # получаем из cache_data email
         email = cache_data["email"]
+        # получаем из cache_data code
         code = cache_data["code"]
-        print(code)
         if token == code:
+            # достаем пользователя из бд по email
             user = User.objects.get(email=email)
+            # переводим user из python в json
             serializer_user = UserSerializer(user).data
-            serializer_user["password"] = hashed_password
+            # сохраняем новый пароль
+            serializer_user["password"] = new_hashed_password
+            # переводим user из json в python (обновляем данные пользователя)
             serializer = UserSerializer(user, data=serializer_user, partial=True)
+            # если сериализатор валиден то он сохраняется
             if serializer.is_valid():
                 serializer.save()
+                # удаляем из кэша code
                 cache.delete("code")
 
                 return Response(
@@ -87,6 +100,7 @@ class ResetPasswordView(APIView):
                     status=status.HTTP_200_OK,
                 )
 
+            # если сериализатор не валиден то выбрасывается ошибка
             else:
                 return Response(
                     {

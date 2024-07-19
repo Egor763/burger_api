@@ -21,6 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = "django-insecure-fa958t4bnt6*2in9es6hk1*&96ndji3e-+p%8(mef5jy6ws)_e"
+# секретный ключ refresh_token
 REFRESH_TOKEN_SECRET = (
     "django-insecure-fa858t4bnt6*2in9es6hk1*&96ndji3e-+p%8(mef5jy6ws)_e"
 )
@@ -60,6 +61,7 @@ CORS_ORIGIN_WHITELIST = [
     "http://localhost:3000",
 ]
 
+# кэш
 CACHES = {
     # a cache alias or name. In this case, we use "default" as the alias.
     "default": {
@@ -70,6 +72,8 @@ CACHES = {
     }
 }
 
+
+# отправка письма на почту
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.yandex.ru"
 EMAIL_PORT = 465
@@ -106,6 +110,23 @@ WSGI_APPLICATION = "burger_api.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
+# * теперь используем postgres
+# ! DATABASES = {
+# !      # "default": {
+# !     #     "ENGINE": "django.db.backends.sqlite3",
+# !     #     "NAME": BASE_DIR / "db.sqlite3",
+# !     # }
+# !     "default": {
+# !         "ENGINE": "django.db.backends.postgresql_psycopg2",
+# !         "NAME": "mestodb",
+# !         "USER": "postgres",
+# !         "PASSWORD": "2412",
+# !         "HOST": "localhost",
+# !         "PORT": "5432",
+# !     }
+# ! }
+
+# * больше не используем
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",

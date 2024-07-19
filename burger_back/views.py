@@ -11,7 +11,7 @@ from .tokens.create_tokens import generate_access_token, generate_refresh_token
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from rest_framework import exceptions
 
-
+# соль хэширует пароль
 SALT = (
     "8b4f6b2cc1868d75ef79e5cfb8779c11b6a374bf0fce05b485581bf4e1e25b96c8c2855015de8449"
 )
@@ -29,10 +29,12 @@ class RegistrationView(APIView):
         access_token = generate_access_token(request.data)
         # генерируем refresh_token
         refresh_token = generate_refresh_token(request.data)
+        # добавляем новое поле в request.data
         request.data["refresh_token"] = refresh_token
 
         exist_email = User.objects.filter(email=request.data["email"]).first()
 
+        # если пользователь с таким email уже существует то выбрасывается ошибка
         if exist_email:
             return Response(
                 {
@@ -45,6 +47,7 @@ class RegistrationView(APIView):
         # сериализатор в формат python
         serializer = UserSerializer(data=request.data)
 
+        # если сериализатор валидный то он сохраняется
         if serializer.is_valid():
 
             serializer.save()
@@ -53,6 +56,7 @@ class RegistrationView(APIView):
 
             # сериализатор в формат json
             serializer_user = UserSerializer(user).data
+            # удаляется пароль потому что это секретная информация
             del serializer_user["password"]
 
             return Response(
@@ -64,6 +68,7 @@ class RegistrationView(APIView):
                 },
                 status=status.HTTP_200_OK,
             )
+        # если сериализатор не валидный то выбрасывается ошибка
         else:
             error_msg = ""
             # ошибка
@@ -96,7 +101,6 @@ class CardViewSet(APIView):
 
 class UserViewSet(APIView):
     def get(self, request, format=None):
-        print("o")
         # проверка токена, нужна для защищенной информации
         SafeJWTAuthentication.authenticate(self, request)
         user = request.user
@@ -115,20 +119,23 @@ class UserViewSet(APIView):
             return Response(user, status=status.HTTP_200_OK)
 
     def patch(self, request, format=None):
-        print("i")
         if request.method == "PATCH":
             serializer_user, user = SafeJWTAuthentication.authenticate(self, request)
-            print(serializer_user)
+            # из фронтенда получаем name
             name = request.data["name"]
+            # из фронтенда получаем email
             email = request.data["email"]
             # password = request.data["password"]
 
+            # ! обновляем значение в базе данных
             serializer_user["name"] = name
             serializer_user["email"] = email
             # serializer_user["password"] = password
 
+            # сериализуем пользователя из json в python
             serializer = UserSerializer(user, data=serializer_user, partial=True)
 
+            # если сериализатор валидный то он сохраняется
             if serializer.is_valid():
                 serializer.save()
                 return Response(
@@ -138,7 +145,7 @@ class UserViewSet(APIView):
                     },
                     status=status.HTTP_200_OK,
                 )
-
+            # если сериализатор не валидный то выбрасывается ошибка
             else:
                 return Response(
                     {
@@ -159,7 +166,7 @@ class UpdateTokenViewSet(APIView):
         # сериализуем user из python в json
         serializer = UserSerializer(user).data
         refresh_db = serializer["refresh_token"]
-        # если пользователь не найден то возвращается ошибка
+        # если пользователь не найден то выбрасывается ошибка
         if serializer["email"] is None or refresh_db != refresh:
             return Response(
                 {
@@ -183,8 +190,11 @@ class UpdateTokenViewSet(APIView):
 
 class LoginView(APIView):
     def post(self, request, format=None):
+        # получаем из форнтенда пароль
         password = request.data["password"]
+        # получаем из фронтенда email
         email = request.data["email"]
+        # хэшируем пароль
         hashed_password = make_password(password=password, salt=SALT)
 
         # ищется пользователь по email
@@ -200,9 +210,13 @@ class LoginView(APIView):
             )
 
         else:
+            # генерируем access_token
             access_token = generate_access_token(request.data)
+            # генерируем refresh_token
             refresh_token = generate_refresh_token(request.data)
+            # переводим user из python в json
             serializer = UserSerializer(user).data
+            # удаляем пароль
             del serializer["password"]
             return Response(
                 {
@@ -217,13 +231,18 @@ class LoginView(APIView):
 
 class LogoutViewSet(APIView):
     def post(self, request, format=None):
+        # получаем из фронтенда refresh_token
         refresh = request.data["token"]
+        # проверяем что refresh_token из фронтенда равен refresh_token из бэкенда
         user = User.objects.get(refresh_token=refresh)
+        # переводим user из python в json
         serializer = UserSerializer(user).data
+        # обнуляем refresh_token
         serializer["refresh_token"] = ""
-        print(serializer)
 
+        # переводим user из json в python
         serializer_update = UserSerializer(user, data=serializer, partial=True)
+        # если сериализатор валиден то он сохраняется
         if serializer_update.is_valid():
             serializer_update.save()
             return Response(
@@ -232,6 +251,8 @@ class LogoutViewSet(APIView):
                 },
                 status=status.HTTP_200_OK,
             )
+
+        # если сериализатор не валиден то выбрасывается ошибка
         else:
             return Response(
                 {
